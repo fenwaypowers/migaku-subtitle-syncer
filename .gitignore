@@ -187,4 +187,9 @@ tags
 pyvenv.cfg
 pip-selfcheck.json
 
+# Ignore common subtitle files
+*.srt
+*.vtt
+*.ass
+
 # End of https://www.toptal.com/developers/gitignore/api/vim,python,virtualenv,vagrant
