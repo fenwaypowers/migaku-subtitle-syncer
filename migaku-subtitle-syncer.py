@@ -146,23 +146,37 @@ def sync_subtitles(
 
 
 def ask_save_overwrite(subtitle_files: SortedList[str]) -> None:
-    question = QMessageBox.question(
-        None,
-        'Save without ".synced"',
-        'Would you like to override the original subtitles?\n\n'
-        'Save - Replaces each original subtitle with its synced counterpart\n'
-        'Close - Quit as-is without renaming subtitles further',
-        buttons=QMessageBox.Save | QMessageBox.Close,
-    )
+    from PyQt5.QtWidgets import QMessageBox
 
-    for subtitle_file in subtitle_files:
-        original_subtitle = Path(subtitle_file)
-        synced_subtitle = original_subtitle.with_suffix(".synced" + original_subtitle.suffix)
+    # Determine if launched from terminal (CLI) or double-click (GUI)
+    launched_from_cli = sys.stdin.isatty()
 
-        if question == QMessageBox.Save:
+    if launched_from_cli:
+        print(
+            'Would you like to override the original subtitles?\n\n'
+            '[y] Save - Replaces each original subtitle with its synced counterpart\n'
+            '[n] Close - Quit as-is without renaming subtitles further'
+        )
+        choice = input('Save synced subtitles over originals? [y/n]: ').strip().lower()
+        overwrite = choice == 'y'
+    else:
+        question = QMessageBox.question(
+            None,
+            'Save without ".synced"',
+            'Would you like to override the original subtitles?\n\n'
+            'Save - Replaces each original subtitle with its synced counterpart\n'
+            'Close - Quit as-is without renaming subtitles further',
+            buttons=QMessageBox.Save | QMessageBox.Close,
+        )
+        overwrite = question == QMessageBox.Save
+
+    if overwrite:
+        for subtitle_file in subtitle_files:
+            original_subtitle = Path(subtitle_file)
+            synced_subtitle = original_subtitle.with_suffix(".synced" + original_subtitle.suffix)
             os.replace(synced_subtitle, original_subtitle)
-        elif question == QMessageBox.Discard:
-            os.remove(synced_subtitle)
+    else:
+        print("Skipped replacing original subtitles. Synced versions are left untouched.")
 
 
 def main():
