@@ -179,6 +179,29 @@ def ask_save_overwrite(subtitle_files: SortedList[str], override: bool = False) 
     else:
         print("Skipped replacing original subtitles. Synced versions are left untouched.")
 
+def rename_subtitles_to_match(
+    video_files: SortedList[str],
+    subtitle_files: SortedList[str],
+    lang_code: Optional[str] = None,
+) -> SortedList[str]:
+    """Rename subtitle files to match the video filenames (optionally adding a language code)."""
+    new_subtitle_files = SortedList()
+
+    for video, subtitle in zip(video_files, subtitle_files):
+        video_path = Path(video)
+        subtitle_path = Path(subtitle)
+
+        # Target name: same as video, with optional language, and original subtitle extension
+        new_name = video_path.with_suffix("")  # remove .mkv, .mp4, etc.
+        if lang_code:
+            new_name = Path(str(new_name) + f".{lang_code}")
+        new_name = new_name.with_suffix(subtitle_path.suffix)  # .srt, .ass, etc.
+
+        os.rename(subtitle_path, new_name)
+        logging.info(f"Renamed {subtitle_path} to {new_name}")
+        new_subtitle_files.add(str(new_name))
+
+    return new_subtitle_files
 
 def main():
     parser = argparse.ArgumentParser(
@@ -189,6 +212,16 @@ def main():
         action="store_true",
         help='Automatically override original subtitles with ".synced" versions without prompting.',
     )
+    parser.add_argument(
+        "--rename",
+        action="store_true",
+        help="Rename subtitle files to match video filenames (before syncing).",
+    )
+    parser.add_argument(
+        "--lang",
+        type=str,
+        help="Language code to append to subtitle filenames (e.g., 'ja', 'en').",
+    )
     args = parser.parse_args()
 
     ffprobe_command, ffmpeg_command = find_ffmpeg_tools()
@@ -196,6 +229,9 @@ def main():
 
     video_files, subtitle_files = gather_files()
     warn_uneven_files(video_files, subtitle_files)
+
+    if args.rename:
+        subtitle_files = rename_subtitles_to_match(video_files, subtitle_files, args.lang)
 
     sync_subtitles(video_files, subtitle_files, ffmpeg_command)
     ask_save_overwrite(subtitle_files, override=args.override)
