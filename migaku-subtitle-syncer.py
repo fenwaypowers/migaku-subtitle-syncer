@@ -106,13 +106,21 @@ def gather_files() -> tuple[SortedList[str], SortedList[str]]:
 
 def warn_uneven_files(video_files: SortedList[str], subtitle_files: SortedList[str]) -> None:
     if len(video_files) != len(subtitle_files):
-        QMessageBox.warning(
-            None,
-            "Migaku Warning Dialog",
+        message = (
             "There is an uneven amount of video files and subtitles in this folder.\n"
-            "Please make sure there are as many subtitles as there are video files.",
-            buttons=QMessageBox.Ok,
+            "Please make sure there are as many subtitles as there are video files."
         )
+
+        if sys.stdin.isatty():  # CLI
+            print("Warning: " + message)
+        else:  # GUI 
+            QMessageBox.warning(
+                None,
+                "Migaku Warning Dialog",
+                message,
+                buttons=QMessageBox.Ok,
+            )
+
         sys.exit(0)
 
 
