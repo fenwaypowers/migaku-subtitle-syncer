@@ -19,7 +19,7 @@ multiprocessing.freeze_support()
 
 app = QApplication([])
 
-video_file_endings = [
+VIDEO_EXTENSIONS = [
     ".webm", ".mkv", ".flv", ".vob", ".ogv", ".ogg", ".drc", ".gif", ".gifv",
     ".mng", ".avi", ".MTS", ".M2TS", ".TS", ".mov", ".qt", ".wmv", ".yuv",
     ".rm", ".rmvb", ".viv", ".asf", ".amv", ".mp4", ".m4p", ".m4v", ".mpg",
@@ -80,7 +80,7 @@ def validate_tools(ffprobe_command: Optional[str], ffmpeg_command: Optional[str]
 
 def check_if_video_file(filename: str) -> bool:
     file_extension = Path(filename).suffix.lower()
-    return file_extension in video_file_endings
+    return file_extension in VIDEO_EXTENSIONS
 
 
 def gather_files() -> tuple[SortedList[str], SortedList[str]]:
